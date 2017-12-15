@@ -8,6 +8,7 @@
 #include "hmderrors_public.h"
 #include "strtools_public.h"
 #include "vrpathregistry_public.h"
+#include "MinHook.h"
 #include <mutex>
 
 using vr::EVRInitError;
@@ -169,6 +170,40 @@ EVRInitError VR_LoadHmdSystemInternal()
 	return VRInitError_None;
 }
 
+typedef uint32_t(__stdcall* _GetStringTrackedDeviceProperty)(void *that, vr::TrackedDeviceIndex_t unDeviceIndex, ETrackedDeviceProperty prop, char *pchValue, uint32_t unBufferSize, ETrackedPropertyError *pError);
+static _GetStringTrackedDeviceProperty GetStringTrackedDeviceProperty_Original;
+
+uint32_t GetStringTrackedDeviceProperty_Hook(void *that, vr::TrackedDeviceIndex_t unDeviceIndex, ETrackedDeviceProperty prop, char *pchValue, uint32_t unBufferSize, ETrackedPropertyError *pError)
+{
+	uint32_t size = 0;
+
+	switch (prop)
+	{
+	case vr::Prop_TrackingSystemName_String:
+		strcpy_s(pchValue, unBufferSize, "lighthouse");
+		size = strlen("lighthouse");
+		if (pError)
+			*pError = vr::TrackedProp_Success;
+		break;
+	case vr::Prop_ManufacturerName_String:
+		strcpy_s(pchValue, unBufferSize, "HTC");
+		size = strlen("HTC");
+		if (pError)
+			*pError = vr::TrackedProp_Success;
+		break;
+	case vr::Prop_ModelNumber_String:
+		strcpy_s(pchValue, unBufferSize, "Vive");
+		size = strlen("Vive");
+		if (pError)
+			*pError = vr::TrackedProp_Success;
+		break;
+	default:
+		size = GetStringTrackedDeviceProperty_Original(that, unDeviceIndex, prop, pchValue, unBufferSize, pError);
+		break;
+	}
+
+	return size;
+}
 
 void *VR_GetGenericInterface(const char *pchInterfaceVersion, EVRInitError *peError)
 {
@@ -181,7 +216,17 @@ void *VR_GetGenericInterface(const char *pchInterfaceVersion, EVRInitError *peEr
 		return NULL;
 	}
 
-	return g_pHmdSystem->GetGenericInterface(pchInterfaceVersion, peError);
+	void* result = g_pHmdSystem->GetGenericInterface(pchInterfaceVersion, peError);
+
+	if (strcmp(pchInterfaceVersion, vr::IVRSystem_Version) == 0)
+	{
+		MH_Initialize();
+		vr::IVRSystem* ptr = (vr::IVRSystem*)result;
+		MH_CreateHookVirtual(ptr, 27, GetStringTrackedDeviceProperty_Hook, (void**)&GetStringTrackedDeviceProperty_Original);
+		MH_EnableHook(MH_ALL_HOOKS);
+	}
+
+	return result;
 }
 
 bool VR_IsInterfaceVersionValid(const char *pchInterfaceVersion)
