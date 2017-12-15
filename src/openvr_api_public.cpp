@@ -170,7 +170,7 @@ EVRInitError VR_LoadHmdSystemInternal()
 	return VRInitError_None;
 }
 
-typedef uint32_t(__stdcall* _GetStringTrackedDeviceProperty)(void *that, vr::TrackedDeviceIndex_t unDeviceIndex, ETrackedDeviceProperty prop, char *pchValue, uint32_t unBufferSize, ETrackedPropertyError *pError);
+typedef uint32_t(*_GetStringTrackedDeviceProperty)(void *that, vr::TrackedDeviceIndex_t unDeviceIndex, ETrackedDeviceProperty prop, char *pchValue, uint32_t unBufferSize, ETrackedPropertyError *pError);
 static _GetStringTrackedDeviceProperty GetStringTrackedDeviceProperty_Original;
 
 uint32_t GetStringTrackedDeviceProperty_Hook(void *that, vr::TrackedDeviceIndex_t unDeviceIndex, ETrackedDeviceProperty prop, char *pchValue, uint32_t unBufferSize, ETrackedPropertyError *pError)
