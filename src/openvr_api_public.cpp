@@ -181,19 +181,19 @@ uint32_t GetStringTrackedDeviceProperty_Hook(void *that, vr::TrackedDeviceIndex_
 	{
 	case vr::Prop_TrackingSystemName_String:
 		strcpy_s(pchValue, unBufferSize, "lighthouse");
-		size = strlen("lighthouse");
+		size = strlen("lighthouse") + 1;
 		if (pError)
 			*pError = vr::TrackedProp_Success;
 		break;
 	case vr::Prop_ManufacturerName_String:
 		strcpy_s(pchValue, unBufferSize, "HTC");
-		size = strlen("HTC");
+		size = strlen("HTC") + 1;
 		if (pError)
 			*pError = vr::TrackedProp_Success;
 		break;
 	case vr::Prop_ModelNumber_String:
 		strcpy_s(pchValue, unBufferSize, "Vive");
-		size = strlen("Vive");
+		size = strlen("Vive") + 1;
 		if (pError)
 			*pError = vr::TrackedProp_Success;
 		break;
