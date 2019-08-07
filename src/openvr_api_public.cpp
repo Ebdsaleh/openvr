@@ -10,6 +10,7 @@
 #include "vrpathregistry_public.h"
 #include "MinHook.h"
 #include <mutex>
+#include <fstream>
 
 using vr::EVRInitError;
 using vr::IVRSystem;
@@ -175,33 +176,32 @@ static _GetStringTrackedDeviceProperty GetStringTrackedDeviceProperty_Original;
 
 uint32_t GetStringTrackedDeviceProperty_Hook(void *that, vr::TrackedDeviceIndex_t unDeviceIndex, ETrackedDeviceProperty prop, char *pchValue, uint32_t unBufferSize, ETrackedPropertyError *pError)
 {
-	uint32_t size = 0;
-
+	const char* str;
 	switch (prop)
 	{
 	case vr::Prop_TrackingSystemName_String:
-		strcpy_s(pchValue, unBufferSize, "lighthouse");
-		size = strlen("lighthouse") + 1;
-		if (pError)
-			*pError = vr::TrackedProp_Success;
+		str = "lighthouse";
 		break;
 	case vr::Prop_ManufacturerName_String:
-		strcpy_s(pchValue, unBufferSize, "HTC");
-		size = strlen("HTC") + 1;
-		if (pError)
-			*pError = vr::TrackedProp_Success;
+		str = "HTC";
 		break;
 	case vr::Prop_ModelNumber_String:
-		strcpy_s(pchValue, unBufferSize, "Vive");
-		size = strlen("Vive") + 1;
-		if (pError)
-			*pError = vr::TrackedProp_Success;
+		if (unDeviceIndex == vr::k_unTrackedDeviceIndex_Hmd)
+			str = "Vive MV";
+		else
+			return GetStringTrackedDeviceProperty_Original(that, unDeviceIndex, prop, pchValue, unBufferSize, pError);
+		break;
+	case vr::Prop_RenderModelName_String:
+		str = (unDeviceIndex == vr::k_unTrackedDeviceIndex_Hmd) ? "generic_hmd" : "vr_controller_vive_1_5";
 		break;
 	default:
-		size = GetStringTrackedDeviceProperty_Original(that, unDeviceIndex, prop, pchValue, unBufferSize, pError);
-		break;
+		return GetStringTrackedDeviceProperty_Original(that, unDeviceIndex, prop, pchValue, unBufferSize, pError);
 	}
 
+	strcpy_s(pchValue, unBufferSize, str);
+	uint32_t size = strlen(str) + 1;
+	if (pError)
+		* pError = vr::TrackedProp_Success;
 	return size;
 }
 
