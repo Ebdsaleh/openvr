@@ -218,11 +218,25 @@ void *VR_GetGenericInterface(const char *pchInterfaceVersion, EVRInitError *peEr
 
 	void* result = g_pHmdSystem->GetGenericInterface(pchInterfaceVersion, peError);
 
-	if (strcmp(pchInterfaceVersion, vr::IVRSystem_Version) == 0)
+	if (strstr(pchInterfaceVersion, "IVRSystem_"))
 	{
+		int version = atoi(pchInterfaceVersion + strlen("IVRSystem_0"));
+		unsigned int memberPos = 28;
+
+		if (version < 14)
+			memberPos = 24;
+		else if (version < 15)
+			memberPos = 25;
+		else if (version < 16)
+			memberPos = 26;
+		else if (version < 17)
+			memberPos = 27;
+		else
+			memberPos = 28;
+
 		MH_Initialize();
 		vr::IVRSystem* ptr = (vr::IVRSystem*)result;
-		MH_CreateHookVirtual(ptr, 27, GetStringTrackedDeviceProperty_Hook, (void**)&GetStringTrackedDeviceProperty_Original);
+		MH_CreateHookVirtual(ptr, memberPos, GetStringTrackedDeviceProperty_Hook, (void**)& GetStringTrackedDeviceProperty_Original);
 		MH_EnableHook(MH_ALL_HOOKS);
 	}
 
