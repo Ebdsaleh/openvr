@@ -35,6 +35,10 @@ endif()
 set(CORE_FILES
 	openvr_api_public.cpp
 	jsoncpp.cpp
+	minhook/buffer.c
+	minhook/hook.c
+	minhook/trampoline.c
+	minhook/hde/hde64.c
 )
 set(VRCOMMON_FILES
 	vrcommon/dirtools_public.cpp
